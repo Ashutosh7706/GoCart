@@ -202,7 +202,7 @@ function ShopContent() {
             setLoading(false);
         } else {
             setLoadingMore(false);
-        }
+        }   
 
         }
 
