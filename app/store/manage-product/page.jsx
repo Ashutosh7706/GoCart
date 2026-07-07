@@ -1,9 +1,9 @@
 'use client'
 import { useEffect, useState } from "react"
 import { toast } from "react-hot-toast"
-import Image from "next/image"
+import Image from "@/components/Image";
 import Loading from "@/components/Loading"
-import { productDummyData } from "@/assets/assets"
+import { useSelector } from "react-redux";
 
 export default function StoreManageProducts() {
 
@@ -11,9 +11,9 @@ export default function StoreManageProducts() {
 
     const [loading, setLoading] = useState(true)
     const [products, setProducts] = useState([])
-
+const productsList = useSelector((state) => state.product.list);
     const fetchProducts = async () => {
-        setProducts(productDummyData)
+        setProducts(productsList)
         setLoading(false)
     }
 

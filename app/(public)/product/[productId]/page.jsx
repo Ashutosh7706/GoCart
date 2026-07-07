@@ -1,43 +1,190 @@
-'use client'
-import ProductDescription from "@/components/ProductDescription";
-import ProductDetails from "@/components/ProductDetails";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { prisma } from "@/lib/prisma";
+import ProductClient from "./ProductClient";
 
-export default function Product() {
+export async function generateMetadata({ params }) {
 
-    const { productId } = useParams();
-    const [product, setProduct] = useState();
-    const products = useSelector(state => state.product.list);
+    const product = await prisma.product.findUnique({
 
-    const fetchProduct = async () => {
-        const product = products.find((product) => product.id === productId);
-        setProduct(product);
+        where: {
+
+            id: params.productId,
+
+        },
+
+        include: {
+
+            store: true,
+
+            rating: true,
+
+        },
+
+    });
+
+    if (!product) {
+
+        return {
+
+            title: "Product Not Found",
+
+            description: "The requested product does not exist.",
+
+        };
+
     }
 
-    useEffect(() => {
-        if (products.length > 0) {
-            fetchProduct()
-        }
-        scrollTo(0, 0)
-    }, [productId,products]);
+    return {
+
+        title: product.name,
+
+        description: product.description,
+
+        keywords: [
+
+            product.name,
+
+            product.category,
+
+            product.store.name,
+
+            "GoCart",
+
+        ],
+
+        openGraph: {
+
+            title: product.name,
+
+            description: product.description,
+
+            images: [
+
+                {
+
+                    url: product.images[0],
+
+                    width: 1200,
+
+                    height: 630,
+
+                },
+
+            ],
+
+        },
+
+        twitter: {
+
+            card: "summary_large_image",
+
+            title: product.name,
+
+            description: product.description,
+
+            images: [product.images[0]],
+
+        },
+
+    };
+
+}
+
+export default async function ProductPage({ params }) {
+
+    const product = await prisma.product.findUnique({
+
+        where: {
+
+            id: params.productId,
+
+        },
+
+        include: {
+
+            rating: true,
+
+            store: true,
+
+        },
+
+    });
+
+    if (!product) {
+
+        return (
+
+            <div className="flex justify-center py-20">
+
+                Product not found
+
+            </div>
+
+        );
+
+    }
 
     return (
-        <div className="mx-6">
-            <div className="max-w-7xl mx-auto">
 
-                {/* Breadcrums */}
-                <div className="  text-gray-600 text-sm mt-8 mb-5">
-                    Home / Products / {product?.category}
-                </div>
+        <>
 
-                {/* Product Details */}
-                {product && (<ProductDetails product={product} />)}
+            <script
 
-                {/* Description & Reviews */}
-                {product && (<ProductDescription product={product} />)}
-            </div>
-        </div>
+                type="application/ld+json"
+
+                dangerouslySetInnerHTML={{
+
+                    __html: JSON.stringify({
+
+                        "@context": "https://schema.org",
+
+                        "@type": "Product",
+
+                        name: product.name,
+
+                        image: product.images,
+
+                        description: product.description,
+
+                        brand: {
+
+                            "@type": "Brand",
+
+                            name: product.store.name,
+
+                        },
+
+                        offers: {
+
+                            "@type": "Offer",
+
+                            price: product.price,
+
+                            priceCurrency: "INR",
+
+                            availability:
+
+                                product.stock > 0
+
+                                    ? "https://schema.org/InStock"
+
+                                    : "https://schema.org/OutOfStock",
+
+                        },
+
+                    }),
+
+                }}
+
+            />
+
+            <ProductClient
+
+                initialProduct={product}
+
+            />
+
+        </>
+
     );
+
 }

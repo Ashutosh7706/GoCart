@@ -1,6 +1,6 @@
 'use client'
 import { assets } from "@/assets/assets"
-import Image from "next/image"
+import Image from "@/components/Image";
 import { useState } from "react"
 import { toast } from "react-hot-toast"
 
@@ -24,12 +24,72 @@ export default function StoreAddProduct() {
     }
 
     const onSubmitHandler = async (e) => {
-        e.preventDefault()
-        // Logic to add a product
-        
-    }
+        e.preventDefault();
 
+        try {
+            setLoading(true);
 
+            // 1. Upload images to Cloudinary
+            const imageUrls = [];
+
+            for (const key of Object.keys(images)) {
+                if (!images[key]) continue;
+
+                const formData = new FormData();
+                formData.append("image", images[key]);
+
+                const uploadRes = await fetch("/api/upload", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                const uploadData = await uploadRes.json();
+
+                imageUrls.push(uploadData.url);
+            }
+
+            // 2. Create Product
+            const res = await fetch("/api/products", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    ...productInfo,
+                    images: imageUrls,
+                }),
+            });
+const data = await res.json();
+
+if (!res.ok) {
+    console.error(data);
+    throw new Error(data.message || "Failed to create product");
+}
+            toast.success("Product Added");
+
+            setProductInfo({
+                name: "",
+                description: "",
+                mrp: 0,
+                price: 0,
+                category: "",
+            });
+
+            setImages({
+                1: null,
+                2: null,
+                3: null,
+                4: null,
+            });
+
+        } catch (error) {
+            console.error(error);
+            toast.error(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
     return (
         <form onSubmit={e => toast.promise(onSubmitHandler(e), { loading: "Adding Product..." })} className="text-slate-500 mb-28">
             <h1 className="text-2xl">Add New <span className="text-slate-800 font-medium">Products</span></h1>

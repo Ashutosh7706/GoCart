@@ -1,8 +1,8 @@
 'use client'
 import { useEffect, useState } from "react"
 import Loading from "@/components/Loading"
-import { orderDummyData } from "@/assets/assets"
-
+import { toast } from "react-hot-toast";
+import Image from "@/components/Image";
 export default function StoreOrders() {
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
@@ -11,13 +11,78 @@ export default function StoreOrders() {
 
 
     const fetchOrders = async () => {
-       setOrders(orderDummyData)
-       setLoading(false)
+
+        try {
+
+            const res = await fetch("/api/store/orders", {
+                credentials: "include",
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.message);
+            }
+
+            setOrders(data);
+
+        } catch (error) {
+
+            console.error(error);
+
+        } finally {
+
+            setLoading(false);
+
+        }
+
     }
 
     const updateOrderStatus = async (orderId, status) => {
-        // Logic to update the status of an order
 
+        try {
+
+            const res = await fetch(`/api/store/orders/${orderId}`, {
+
+                method: "PUT",
+
+                headers: {
+                    "Content-Type": "application/json",
+                },
+
+                credentials: "include",
+
+                body: JSON.stringify({
+                    status,
+                }),
+
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+
+                throw new Error(data.message);
+
+            }
+
+              console.log("Success");
+
+      setOrders((prevOrders) =>
+    prevOrders.map((order) =>
+        order.id === orderId
+            ? { ...order, status }
+            : order
+    )
+);
+
+toast.success("Order status updated");
+
+        } catch (error) {
+
+            toast.error(error.message);
+
+        }
 
     }
 
@@ -43,7 +108,7 @@ export default function StoreOrders() {
             {orders.length === 0 ? (
                 <p>No orders found</p>
             ) : (
-                <div className="overflow-x-auto max-w-4xl rounded-md shadow border border-gray-200">
+                <div className="overflow-x-auto max-w-6xl rounded-md shadow border border-gray-200">
                     <table className="w-full text-sm text-left text-gray-600">
                         <thead className="bg-gray-50 text-gray-700 text-xs uppercase tracking-wider">
                             <tr>
@@ -64,26 +129,109 @@ export default function StoreOrders() {
                                     </td>
                                     <td className="px-4 py-3">{order.user?.name}</td>
                                     <td className="px-4 py-3 font-medium text-slate-800">${order.total}</td>
-                                    <td className="px-4 py-3">{order.paymentMethod}</td>
-                                    <td className="px-4 py-3">
-                                        {order.isCouponUsed ? (
-                                            <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">
-                                                {order.coupon?.code}
+                                    <td>
+
+                                        <div className="space-y-1">
+
+                                            <p className="font-medium">
+
+                                                {order.paymentMethod}
+
+                                            </p>
+
+                                            <span
+                                                className={`text-xs px-2 py-1 rounded-full
+
+            ${order.payment?.status === "SUCCESS"
+
+                                                        ? "bg-green-100 text-green-700"
+
+                                                        : order.payment?.status === "FAILED"
+
+                                                            ? "bg-red-100 text-red-700"
+
+                                                            : "bg-yellow-100 text-yellow-700"
+
+                                                    }`}
+                                            >
+
+                                                {order.payment?.status || "PENDING"}
+
                                             </span>
+
+                                        </div>
+
+                                    </td>
+                                    <td className="px-4 py-3">
+
+                                        {order.isCouponUsed ? (
+
+                                            <div className="flex flex-col gap-1">
+
+                                                <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full w-fit">
+
+                                                    {order.coupon.code}
+
+                                                </span>
+
+                                                <span className="text-xs text-slate-500">
+
+                                                    {order.coupon.discount}% OFF
+
+                                                </span>
+
+                                            </div>
+
                                         ) : (
+
                                             "—"
+
                                         )}
+
                                     </td>
                                     <td className="px-4 py-3" onClick={(e) => { e.stopPropagation() }}>
                                         <select
                                             value={order.status}
-                                            onChange={e => updateOrderStatus(order.id, e.target.value)}
-                                            className="border-gray-300 rounded-md text-sm focus:ring focus:ring-blue-200"
+                                            onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                                            className="border rounded-lg px-3 py-2"
                                         >
-                                            <option value="ORDER_PLACED">ORDER_PLACED</option>
-                                            <option value="PROCESSING">PROCESSING</option>
-                                            <option value="SHIPPED">SHIPPED</option>
-                                            <option value="DELIVERED">DELIVERED</option>
+
+                                            <option value="ORDER_PLACED">
+
+                                                Order Placed
+
+                                            </option>
+
+                                            <option value="PROCESSING">
+
+                                                Processing
+
+                                            </option>
+
+                                            <option value="PACKED">
+
+                                                Packed
+
+                                            </option>
+
+                                            <option value="SHIPPED">
+
+                                                Shipped
+
+                                            </option>
+
+                                            <option value="OUT_FOR_DELIVERY">
+
+                                                Out For Delivery
+
+                                            </option>
+
+                                            <option value="DELIVERED">
+
+                                                Delivered
+
+                                            </option>
+
                                         </select>
                                     </td>
                                     <td className="px-4 py-3 text-gray-500">
@@ -119,9 +267,11 @@ export default function StoreOrders() {
                             <div className="space-y-2">
                                 {selectedOrder.orderItems.map((item, i) => (
                                     <div key={i} className="flex items-center gap-4 border border-slate-100 shadow rounded p-2">
-                                        <img
+                                        <Image
                                             src={item.product.images?.[0].src || item.product.images?.[0]}
                                             alt={item.product?.name}
+                                            width={64}
+                                            height={64}
                                             className="w-16 h-16 object-cover rounded"
                                         />
                                         <div className="flex-1">
@@ -134,15 +284,78 @@ export default function StoreOrders() {
                             </div>
                         </div>
 
+
                         {/* Payment & Status */}
+
                         <div className="mb-4">
-                            <p><span className="text-green-700">Payment Method:</span> {selectedOrder.paymentMethod}</p>
-                            <p><span className="text-green-700">Paid:</span> {selectedOrder.isPaid ? "Yes" : "No"}</p>
+
+                            <p>
+                                <span className="text-green-700">
+                                    Payment Method:
+                                </span>{" "}
+                                {selectedOrder.paymentMethod}
+                            </p>
+
+                            <p>
+                                <span className="text-green-700">
+                                    Payment Status:
+                                </span>{" "}
+                                {selectedOrder.payment?.status || "PENDING"}
+                            </p>
+
+                            <p>
+                                <span className="text-green-700">
+                                    Transaction ID:
+                                </span>{" "}
+                                {selectedOrder.payment?.transactionId || "N/A"}
+                            </p>
+
+                            <p>
+                                <span className="text-green-700">
+                                    Paid:
+                                </span>{" "}
+                                {selectedOrder.isPaid ? "Yes" : "No"}
+                            </p>
+
                             {selectedOrder.isCouponUsed && (
-                                <p><span className="text-green-700">Coupon:</span> {selectedOrder.coupon.code} ({selectedOrder.coupon.discount}% off)</p>
+
+                                <div className="mt-2">
+
+                                    <span className="text-green-700 font-medium">
+
+                                        Coupon :
+
+                                    </span>
+
+                                    <span className="ml-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+
+                                        {selectedOrder.coupon.code}
+
+                                    </span>
+
+                                    <span className="ml-2 text-slate-600">
+
+                                        ({selectedOrder.coupon.discount}% OFF)
+
+                                    </span>
+
+                                </div>
+
                             )}
-                            <p><span className="text-green-700">Status:</span> {selectedOrder.status}</p>
-                            <p><span className="text-green-700">Order Date:</span> {new Date(selectedOrder.createdAt).toLocaleString()}</p>
+                            <p>
+                                <span className="text-green-700">
+                                    Status:
+                                </span>{" "}
+                                {selectedOrder.status}
+                            </p>
+
+                            <p>
+                                <span className="text-green-700">
+                                    Order Date:
+                                </span>{" "}
+                                {new Date(selectedOrder.createdAt).toLocaleString()}
+                            </p>
+
                         </div>
 
                         {/* Actions */}

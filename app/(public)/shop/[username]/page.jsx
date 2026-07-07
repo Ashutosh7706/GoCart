@@ -1,68 +1,346 @@
-'use client'
-import ProductCard from "@/components/ProductCard"
-import { useParams } from "next/navigation"
-import { useEffect, useState } from "react"
-import { MailIcon, MapPinIcon } from "lucide-react"
-import Loading from "@/components/Loading"
-import Image from "next/image"
-import { dummyStoreData, productDummyData } from "@/assets/assets"
+import { prisma } from "@/lib/prisma";
+import Image from "@/components/Image";
+<>
+    <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Store",
+                name: store.name,
+                description: store.description,
+                image: store.logo,
+                url: `${process.env.NEXT_PUBLIC_APP_URL}/shop/${store.username}`,
+                telephone: store.contact,
+                email: store.email,
+                address: {
+                    "@type": "PostalAddress",
+                    streetAddress: store.address,
+                },
+            }),
+        }}
+    />
 
-export default function StoreShop() {
+    <div className="bg-white rounded-3xl border shadow-sm overflow-hidden mb-10">
 
-    const { username } = useParams()
-    const [products, setProducts] = useState([])
-    const [storeInfo, setStoreInfo] = useState(null)
-    const [loading, setLoading] = useState(true)
+        {/* Banner */}
 
-    const fetchStoreData = async () => {
-        setStoreInfo(dummyStoreData)
-        setProducts(productDummyData)
-        setLoading(false)
+        <div className="h-44 bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500"></div>
+
+        {/* Store Info */}
+
+        <div className="px-10 pb-8">
+
+            <div className="flex flex-col lg:flex-row items-center lg:items-end gap-8 -mt-20">
+
+                {/* Logo */}
+
+                <Image
+                    src={store.logo}
+                    alt={store.name}
+                    className="w-36 h-36 rounded-full border-8 border-white bg-white object-cover shadow-xl"
+                />
+
+                <div className="flex-1">
+
+                    <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center">
+
+                        <div>
+
+                            <h1 className="text-4xl font-bold">
+
+                                {store.name}
+
+                            </h1>
+
+                            <p className="text-slate-600 mt-2">
+
+                                {store.description}
+
+                            </p>
+
+                        </div>
+
+                        <span className="mt-4 lg:mt-0 px-5 py-2 rounded-full bg-green-100 text-green-700 font-semibold">
+
+                            {products.length} Products
+
+                        </span>
+
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-6 mt-8 text-sm">
+
+                        <div>
+
+                            <p className="text-slate-500">
+
+                                Email
+
+                            </p>
+
+                            <p className="font-medium">
+
+                                {store.email}
+
+                            </p>
+
+                        </div>
+
+                        <div>
+
+                            <p className="text-slate-500">
+
+                                Contact
+
+                            </p>
+
+                            <p className="font-medium">
+
+                                {store.contact}
+
+                            </p>
+
+                        </div>
+
+                        <div>
+
+                            <p className="text-slate-500">
+
+                                Address
+
+                            </p>
+
+                            <p className="font-medium">
+
+                                {store.address}
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {/* Products */}
+
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+
+        {products.map(product => (
+
+            <ProductCard
+                key={product.id}
+                product={product}
+            />
+
+        ))}
+
+    </div>
+
+</>
+
+export async function generateMetadata({ params }) {
+
+    const store = await prisma.store.findUnique({
+
+        where: {
+
+            username: params.username,
+
+        },
+
+    });
+
+    if (!store) {
+
+        return {
+
+            title: "Store Not Found",
+
+            description: "The requested store could not be found.",
+
+        };
+
     }
 
-    useEffect(() => {
-        fetchStoreData()
-    }, [])
+    return {
 
-    return !loading ? (
-        <div className="min-h-[70vh] mx-6">
+        
 
-            {/* Store Info Banner */}
-            {storeInfo && (
-                <div className="max-w-7xl mx-auto bg-slate-50 rounded-xl p-6 md:p-10 mt-6 flex flex-col md:flex-row items-center gap-6 shadow-xs">
-                    <Image
-                        src={storeInfo.logo}
-                        alt={storeInfo.name}
-                        className="size-32 sm:size-38 object-cover border-2 border-slate-100 rounded-md"
-                        width={200}
-                        height={200}
-                    />
-                    <div className="text-center md:text-left">
-                        <h1 className="text-3xl font-semibold text-slate-800">{storeInfo.name}</h1>
-                        <p className="text-sm text-slate-600 mt-2 max-w-lg">{storeInfo.description}</p>
-                        <div className="text-xs text-slate-500 mt-4 space-y-1"></div>
-                        <div className="space-y-2 text-sm text-slate-500">
-                            <div className="flex items-center">
-                                <MapPinIcon className="w-4 h-4 text-gray-500 mr-2" />
-                                <span>{storeInfo.address}</span>
-                            </div>
-                            <div className="flex items-center">
-                                <MailIcon className="w-4 h-4 text-gray-500 mr-2" />
-                                <span>{storeInfo.email}</span>
-                            </div>
-                           
-                        </div>
-                    </div>
-                </div>
-            )}
+        title: store.name,
 
-            {/* Products */}
-            <div className=" max-w-7xl mx-auto mb-40">
-                <h1 className="text-2xl mt-12">Shop <span className="text-slate-800 font-medium">Products</span></h1>
-                <div className="mt-5 grid grid-cols-2 sm:flex flex-wrap gap-6 xl:gap-12 mx-auto">
-                    {products.map((product) => <ProductCard key={product.id} product={product} />)}
-                </div>
-            </div>
-        </div>
-    ) : <Loading />
+        description: store.description,
+
+        keywords: [
+
+            store.name,
+
+            "GoCart",
+
+            "Online Store",
+
+            "Marketplace",
+
+        ],
+
+        openGraph: {
+
+            title: store.name,
+
+            description: store.description,
+
+            url: `${process.env.NEXT_PUBLIC_APP_URL}/shop/${store.username}`,
+
+            images: [
+
+                {
+
+                    url: store.logo,
+
+                    width: 1200,
+
+                    height: 630,
+
+                },
+
+            ],
+
+        },
+
+        twitter: {
+
+            card: "summary_large_image",
+
+            title: store.name,
+
+            description: store.description,
+
+            images: [
+
+                store.logo,
+
+            ],
+
+        },
+
+        alternates: {
+
+            canonical:
+
+                `${process.env.NEXT_PUBLIC_APP_URL}/shop/${store.username}`,
+
+        },
+
+    };
+
+
+
+    
+
+}
+export async function generateMetadata({ params }) {
+
+    const store = await prisma.store.findUnique({
+
+        where: {
+
+            username: params.username,
+
+        },
+
+    });
+
+    if (!store) {
+
+        return {
+
+            title: "Store Not Found",
+
+            description: "The requested store could not be found.",
+
+        };
+
+    }
+
+    return {
+
+        
+
+        title: store.name,
+
+        description: store.description,
+
+        keywords: [
+
+            store.name,
+
+            "GoCart",
+
+            "Online Store",
+
+            "Marketplace",
+
+        ],
+
+        openGraph: {
+
+            title: store.name,
+
+            description: store.description,
+
+            url: `${process.env.NEXT_PUBLIC_APP_URL}/shop/${store.username}`,
+
+            images: [
+
+                {
+
+                    url: store.logo,
+
+                    width: 1200,
+
+                    height: 630,
+
+                },
+
+            ],
+
+        },
+
+        twitter: {
+
+            card: "summary_large_image",
+
+            title: store.name,
+
+            description: store.description,
+
+            images: [
+
+                store.logo,
+
+            ],
+
+        },
+
+        alternates: {
+
+            canonical:
+
+                `${process.env.NEXT_PUBLIC_APP_URL}/shop/${store.username}`,
+
+        },
+
+    };
+
+
+
+    
+
 }

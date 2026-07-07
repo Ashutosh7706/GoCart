@@ -1,7 +1,7 @@
 'use client'
 import { assets } from '@/assets/assets'
 import { ArrowRightIcon, ChevronRightIcon } from 'lucide-react'
-import Image from 'next/image'
+import Image from "@/components/Image";
 import React from 'react'
 import CategoriesMarquee from './CategoriesMarquee'
 
