@@ -10,22 +10,22 @@ datasource db {
 }
 
 model User {
-  id             String          @id @default(cuid())
-  name           String
-  email          String          @unique
-  image          String?
-  createdAt      DateTime        @default(now())
-  password       String?
-  role           Role            @default(CUSTOMER)
-  accounts       Account[]
-  Address        Address[]
-  cart           Cart?
-  buyerOrders    Order[]         @relation("BuyerRelation")
-  ratings        Rating[]
-  sessions       Session[]
-  store          Store?
-  wishlist       Wishlist[]
-  notification   Notification[]
+  id          String    @id @default(cuid())
+  name        String
+  email       String    @unique
+  image       String?
+  createdAt   DateTime  @default(now())
+  password    String?
+  role        Role      @default(CUSTOMER)
+  accounts    Account[]
+  Address     Address[]
+  cart        Cart?
+  buyerOrders Order[]   @relation("BuyerRelation")
+  ratings     Rating[]
+  sessions    Session[]
+  store       Store?
+  wishlist Wishlist[]
+  notification Notification[]
   returnRequests ReturnRequest[]
 }
 
@@ -48,34 +48,32 @@ model Product {
   orderItems  OrderItem[]
   store       Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
   rating      Rating[]
-  wishlist    Wishlist[]
+  wishlist Wishlist[]
 }
 
 model Order {
-  id             String          @id @default(cuid())
+  id             String        @id @default(cuid())
   total          Float
-  status         OrderStatus     @default(ORDER_PLACED)
+  status         OrderStatus   @default(ORDER_PLACED)
   userId         String
   storeId        String
   addressId      String
-  isPaid         Boolean         @default(false)
+  isPaid         Boolean       @default(false)
   paymentMethod  PaymentMethod
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  isCouponUsed   Boolean         @default(false)
-  coupon         Json            @default("{}")
-  discount       Float           @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  isCouponUsed   Boolean       @default(false)
+  coupon         Json          @default("{}")
+  discount       Float         @default(0)
   shippingCharge Float
   subTotal       Float
   tax            Float
-  address        Address         @relation(fields: [addressId], references: [id])
-  store          Store           @relation(fields: [storeId], references: [id])
-  user           User            @relation("BuyerRelation", fields: [userId], references: [id])
+  address        Address       @relation(fields: [addressId], references: [id])
+  store          Store         @relation(fields: [storeId], references: [id])
+  user           User          @relation("BuyerRelation", fields: [userId], references: [id])
   orderItems     OrderItem[]
-  payment        Payment?        @relation("OrderPayment")
-  ReturnRequest  ReturnRequest[]
+  payment        Payment?      @relation("OrderPayment")
 }
-
 model OrderItem {
   orderId   String
   productId String
@@ -103,7 +101,7 @@ model Rating {
 }
 
 model Address {
-  id        String  @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
   name      String
   email     String
@@ -112,7 +110,7 @@ model Address {
   state     String
   zip       String
   country   String
-  isDefault Boolean @default(false)
+  isDefault  Boolean  @default(false)
 
   phone     String
   createdAt DateTime @default(now())
@@ -209,46 +207,48 @@ model Payment {
   id            String        @id @default(cuid())
   orderId       String        @unique
   transactionId String?
-  refundId      String?
+    refundId String?
   gateway       String
   amount        Float
   status        PaymentStatus @default(PENDING)
   createdAt     DateTime      @default(now())
   order         Order         @relation("OrderPayment", fields: [orderId], references: [id])
 }
-
 model Wishlist {
   userId    String
   productId String
   createdAt DateTime @default(now())
 
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@id([userId, productId])
 }
-
 model Notification {
-  id String @id @default(cuid())
 
-  userId String
+  id        String   @id @default(cuid())
 
-  title String
+  userId    String
 
-  message String
+  title     String
 
-  type NotificationType
+  message   String
 
-  isRead Boolean @default(false)
+  type      NotificationType
 
-  link String?
+  isRead    Boolean  @default(false)
+
+  link       String?
 
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+
 }
 
+
 model ReturnRequest {
+
   id String @id @default(cuid())
 
   orderId String
@@ -269,12 +269,15 @@ model ReturnRequest {
 
   updatedAt DateTime @updatedAt
 
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order Order @relation(fields:[orderId], references:[id], onDelete:Cascade)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+
 }
 
+
 enum NotificationType {
+
   ORDER
 
   PAYMENT
@@ -288,7 +291,10 @@ enum NotificationType {
   STORE
 
   SYSTEM
+
 }
+
+
 
 enum Role {
   CUSTOMER
@@ -303,6 +309,7 @@ enum StoreStatus {
 }
 
 enum OrderStatus {
+
   ORDER_PLACED
 
   PROCESSING
@@ -314,8 +321,8 @@ enum OrderStatus {
   OUT_FOR_DELIVERY
 
   DELIVERED
-}
 
+}
 enum PaymentMethod {
   COD
   STRIPE
@@ -328,7 +335,8 @@ enum PaymentStatus {
   REFUNDED
 }
 
-enum ReturnStatus {
+  enum ReturnStatus {
+
   REQUESTED
 
   APPROVED
@@ -336,4 +344,5 @@ enum ReturnStatus {
   REJECTED
 
   REFUNDED
+
 }
