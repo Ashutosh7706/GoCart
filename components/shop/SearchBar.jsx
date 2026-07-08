@@ -12,7 +12,7 @@ export default function SearchBar({
 
     return (
 
-        <div className="bg-white border rounded-xl p-4 shadow-sm">
+        <div className="bg-white rounded-xl p-4 shadow-sm">
 
             <div className="relative">
 

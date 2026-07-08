@@ -152,6 +152,8 @@ export async function GET(req) {
 
         });
 
+        const totalPages = Math.ceil(total / limit);
+
         return NextResponse.json({
 
             products,
